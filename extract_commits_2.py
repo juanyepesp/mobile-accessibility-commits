@@ -171,6 +171,7 @@ def fetch_repo_metadata(owner_repo: str, app_name: str):
             except Exception:
                 languages_list = []
 
+    # TODO: review writing to file for columns in return
     return {"description": description, "topics": topics, "languages": languages_list}
 
 

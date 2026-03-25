@@ -22,7 +22,14 @@ https://api.github.com/repos/OWNER/REPO/languages
 https://api.github.com/repos/OWNER/REPO/issues
 ```
 
+**Get issues:**
+```
+https://api.github.com/repos/OWNER/REPO/issues/NUM/timeline
+```
+
+
 **Get all repository info, find topics (tags):**
 ```
 https://api.github.com/repos/OWNER/REPO | grep topics 
 ```
+
