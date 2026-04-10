@@ -17,9 +17,19 @@ curl -L \
 https://api.github.com/repos/OWNER/REPO/languages
 ```
 
-**Get issues:**
+**Search issues by repository name & state:**
+
+(Other queries can be added to the URL.s see [ref](https://github.blog/changelog/2026-04-02-improved-search-for-github-issues-is-now-generally-available/))
+
 ```
-https://api.github.com/repos/OWNER/REPO/issues
+curl -H 'Accept: application/vnd.github.text-match+json' \
+    'https://api.github.com/search/issues?q=repo:{owner}/{repo}+state:closed'
+```
+
+example:
+```
+curl -H 'Accept: application/vnd.github.text-match+json' \
+    'https://api.github.com/search/issues?q=repo:Automattic/simplenote-android+state:closed'
 ```
 
 **Get issues:**
@@ -32,4 +42,3 @@ https://api.github.com/repos/OWNER/REPO/issues/NUM/timeline
 ```
 https://api.github.com/repos/OWNER/REPO | grep topics 
 ```
-
