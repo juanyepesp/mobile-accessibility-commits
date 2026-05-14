@@ -42,3 +42,16 @@ https://api.github.com/repos/OWNER/REPO/issues/NUM/timeline
 ```
 https://api.github.com/repos/OWNER/REPO | grep topics 
 ```
+
+
+## Issue Extraction Endpoint
+
+```sh
+curl -H 'Accept: application/vnd.github.text-match+json' \
+    'https://api.github.com/repos/Automattic/simplenote-android/issues/1808/timeline'
+```
+
+```sh
+curl -H 'Accept: application/vnd.github.text-match+json' \
+    'https://api.github.com/search/issues?q=repo:appditto/natrium_wallet_flutter+state:closed'
+```
