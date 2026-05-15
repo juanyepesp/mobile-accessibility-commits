@@ -43,6 +43,12 @@ https://api.github.com/repos/OWNER/REPO/issues/NUM/timeline
 https://api.github.com/repos/OWNER/REPO | grep topics 
 ```
 
+**Getting all issues or pull requests that are cross referenced with each other**
+API documentation link
+```
+https://docs.github.com/en/graphql/reference/objects#crossreferencedevent
+```
+
 
 ## Issue Extraction Endpoint
 
