@@ -212,18 +212,24 @@ def get_repository_issues(owner, repo):
             requests = json.loads(r.text)['items']
 
             for req_body in requests:
-                print(req_body.keys())
                 matches_title = find_keywords(req_body['title'].lower())
                 matches_body = find_keywords(req_body['body'].lower())
                 # matches_comments = find_keywords(req_body['comments'].lower())
                 issue_num = req_body['url'].split('/')[-1]
                 
                 repo_url = req_body['repository_url']
-                if matches_title or matches_body:
-                    commits_url = f'https://api.github.com/repos/{owner}/{repo}/issues/{issue_num}/timeline'
-                    print("==FOUND MATCHING ISSUE, EXTRACTING COMMITS==") 
+                if matches_title or matches_body:                    
+                    print(f"https://www.github.com/{owner}/{repo}/issues/{issue_num}/")
+                    timeline_url = f'https://api.github.com/repos/{owner}/{repo}/issues/{issue_num}/timeline'
+                    # events_url = f'https://api.github.com/repos/{owner}/{repo}/issues/{issue_num}/events'
+                    # commits_url = f'https://api.github.com/repos/{owner}/{repo}/pulls/{pull_num}/commits'
+
+                    # TODO we might need to use cross referenced events to actually get the issues and PRs linked to each other
+                    # might not be possible with REST, might have to use GraphQL
+                    # https://docs.github.com/en/graphql/reference/objects#crossreferencedevent
+                    
                     try:
-                        r = SESSION.get(commits_url, headers=headers, timeout=30)
+                        r = SESSION.get(timeline_url, headers=headers, timeout=30)
                     except Exception as e:
                         # transient network error
                         if atmpt < 4:
@@ -243,49 +249,68 @@ def get_repository_issues(owner, repo):
                     
                     if r.status_code == 200: 
                         requests = json.loads(r.text)
-                        for commit in requests:
-                            print(commit["event"])
-                            if commit["event"] == "commited":
-                                print("Commit DATA")
-                                pprint(commit)
-                                diff_files = []
-                                for parent in commit["parents"]:
-                                    try:
-                                        path = save_compare_diff(owner, repo, parent, commit.hash)
-                                        if path:
-                                            diff_files.append(str(path))
-                                    except Exception as e:
-                                        print(f"  WARN: failed to save diff for {parent}..{commit.hash}: {e}")
-                                input()
-                                r = {
-                                    "repo": repo_url,
-                                    "hash": commit["sha"],
-                                    "author": commit["author"]["name"] if commit["author"] else "unknown",
-                                    "email": commit["author"]["email"] if commit["author"] else "unknown",
-                                    "date": commit["author"]["date"].strftime("%Y-%m-%d") if commit["author"] else "unknown",
-                                    "message": commit["message"], 
-                                    "parents": ", ".join(commit["parents"]) if commit["parents"] else "",
-                                    "description": metadata.get("description", ""),
-                                    "topics": ", ".join(metadata.get("topics", [])),
-                                    "languages": ", ".join(metadata.get("languages", [])),
-                                    "diff_files": ";".join(diff_files)
-                                }
-                                
-                                try:
-                                    save_commit_message(repo, commit.hash, commit["message"])
-                                except Exception as e:
-                                    print(f"  WARN: failed to save commit message for {commit["hash"]}: {e}")
-                            elif commit["event"] == "closed" and commit["commit_url"]:
-                                pass 
+                        pprint(requests)
+                        for event in requests:
+                            # many timeline events are possible                            
+                            print(event['event'], event['url'])
+                        input()
+
                             
+                        #     if (timeline_event['event'] == 'closed') and (timeline_event['commit_url']):
+                        #         pprint(timeline_event)
+                            
+                        #     if (timeline_event['event'] == 'closed') and (timeline_event['state_reason'] == 'completed'):
+                        #         pprint(timeline_event)
+                            
+                        #     if (timeline_event['event'] == 'commented'):
+                        #         # some comments for this will include the pull request:
+                        #         # 'Fixed in #1787.'
+                        #         # but linking whe number, not the 
+                        #         pprint(timeline_event['body'])
+
+
+                            # print(commit["event"])
+                            # if commit["event"] == "commited":
+                            #     print("Commit DATA")
+                            #     pprint(commit)
+                            #     diff_files = []
+                            #     for parent in commit["parents"]:
+                            #         try:
+                            #             path = save_compare_diff(owner, repo, parent, commit.hash)
+                            #             if path:
+                            #                 diff_files.append(str(path))
+                            #         except Exception as e:
+                            #             print(f"  WARN: failed to save diff for {parent}..{commit.hash}: {e}")
+                            #     input()
+                            #     r = {
+                            #         "repo": repo_url,
+                            #         "hash": commit["sha"],
+                            #         "author": commit["author"]["name"] if commit["author"] else "unknown",
+                            #         "email": commit["author"]["email"] if commit["author"] else "unknown",
+                            #         "date": commit["author"]["date"].strftime("%Y-%m-%d") if commit["author"] else "unknown",
+                            #         "message": commit["message"], 
+                            #         "parents": ", ".join(commit["parents"]) if commit["parents"] else "",
+                            #         "description": metadata.get("description", ""),
+                            #         "topics": ", ".join(metadata.get("topics", [])),
+                            #         "languages": ", ".join(metadata.get("languages", [])),
+                            #         "diff_files": ";".join(diff_files)
+                            #     }
+                                
+                            #     try:
+                            #         save_commit_message(repo, commit.hash, commit["message"])
+                            #     except Exception as e:
+                            #         print(f"  WARN: failed to save commit message for {commit["hash"]}: {e}")
+                            # elif commit["event"] == "closed" and commit["commit_url"]:
+                            #     pass 
+                        
                     
-                    elif r.status_code in (202, 409):
+                    elif r.status_code in (202, 409, 404):
                         time.sleep(1 + atmpt * 2)
                         continue
                     else:
                         return None
                     
-        elif r.status_code in (202, 409):
+        elif r.status_code in (202, 409, 404):
             time.sleep(1 + atmpt * 2)
             continue
         else:
